@@ -3,6 +3,9 @@ logs
 *.log
 npm-debug.log*
 
+# mac tempfile
+.DS_Store
+
 # Runtime data
 pids
 *.pid
