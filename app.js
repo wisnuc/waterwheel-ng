@@ -4,12 +4,16 @@ import bodyParser from 'body-parser'
 import routes from './routes'
 import config from 'config-lite'
 import pkg from './package'
+import auth from './middlewares/auth'
 
 
 let app = express()
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+
+//auth middleware
+app.use(auth.init())
 
 // 路由
 routes(app)
