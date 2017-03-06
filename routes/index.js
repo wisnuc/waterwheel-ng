@@ -1,11 +1,16 @@
 import login from './login'
+import job from './job'
 
 const routes = app => {
-  app.use('/login',login)
-  app.use((req,res)=>{
+  app.use('/login', login)
+  app.use('/job', job)
+
+
+
+  app.use((req, res) => {
     console.log(req.url)
     if(!res.headersSent){
-     res.writeHead(200,{'Content-Type':'text/html'})
+     res.writeHead(404,{'Content-Type':'text/html'})
      res.end()
     }
   })

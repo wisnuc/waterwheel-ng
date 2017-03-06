@@ -2,21 +2,21 @@ import path from 'path'
 import { Router } from 'express'
 
 import paths from '../lib/paths'
-import { createChannelModelAsync } from '../models/channelModel'
+import { getChannelModelAsync } from '../models/channelModel'
 
 const router = Router();
 
-router.post('/', (req,res) => {
+router.post('/', (req, res) => {
   let userToken = req.body.usertoken
   console.log(userToken)
   let channelPath = path.join(paths.get('channels'), 'channels.json')
-  createChannelModelAsync(channelPath, paths.get('tmp')).asCallback((err, channelModel) => {
+  getChannelModelAsync().asCallback((err, channelModel) => {
     if(err) return res.status(500).json({})
     else{
       channelModel.createChannel(userToken, (err, newChannel) => {
         if(err) return res.status(500).end() 
         res.json({
-          id: newChannel.channel,
+          id: newChannel.channelid,
           token: newChannel.channelToken
         })
       })
@@ -25,7 +25,7 @@ router.post('/', (req,res) => {
 })
 
 
-router.get('/', (req,res) => {
+router.get('/', (req, res) => {
   res.write('TODO api')
   res.end()
 })

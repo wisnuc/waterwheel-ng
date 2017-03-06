@@ -6,6 +6,11 @@ npm-debug.log*
 # mac tempfile
 .DS_Store
 
+# file-folder dev
+tmp
+files
+channels
+
 # Runtime data
 pids
 *.pid

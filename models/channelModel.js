@@ -1,4 +1,5 @@
 import EventEmitter from 'events'
+import path from 'path'
 
 import jwt from 'jwt-simple'
 import UUID from 'node-uuid'
@@ -6,6 +7,7 @@ import UUID from 'node-uuid'
 import { tokenFromNas } from '../lib/channel'
 import { secret }  from '../config/passportJwt'
 import { openOrCreateCollectionAsync} from './collection'
+import paths from '../lib/paths'
 
 
 /**
@@ -73,7 +75,7 @@ class ChannelModel extends EventEmitter{
         return callback(new Error('invalid channelToken'))
       let newChannel = {
           channelToken,
-          channel: uuid,
+          channelid: uuid,
           jobs: [],
           user
       }
@@ -83,6 +85,19 @@ class ChannelModel extends EventEmitter{
         if (err) return callback(err)
         callback(null, newChannel)
       })
+    })
+  }
+
+  //create new Job
+  createJob(channelId, callback){
+    let channel =  this.collection.list.find(c => c.channelid === channelId)
+    let newJob = {
+      jobid: UUID.v4()
+    }
+    channel.jobs.push(newJob)
+    this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
+        if(err) return callback(err)
+        callback(null,newJob)
     })
   }
 
@@ -102,12 +117,16 @@ const createChannelModelAsync = async (filepath, tmpfolder) => {
     let collection = await openOrCreateCollectionAsync(filepath, tmpfolder) 
     if (collection) {
       channelModel = new ChannelModel(collection)
-      // console.log("channelModel:" + channelModel)
       return channelModel
     }
     return null
   }
-  
 }
 
-export { createChannelModel, createChannelModelAsync }
+const getChannelModelAsync = async () => {
+  let channelPath = path.join(paths.get('channels'), 'channels.json')
+  if(channelModel) return channelModel;
+  else return await createChannelModelAsync(channelPath, paths.get('tmp'));
+}
+
+export { createChannelModel, createChannelModelAsync, getChannelModelAsync}
