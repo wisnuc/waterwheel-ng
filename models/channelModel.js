@@ -4,8 +4,42 @@ import jwt from 'jwt-simple'
 import UUID from 'node-uuid'
 
 import { tokenFromNas } from '../lib/channel'
-import secret from '../config/passportJwt'
+import { secret }  from '../config/passportJwt'
 import { openOrCreateCollectionAsync} from './collection'
+
+
+/**
+ * ChannelModel collection->list
+ * 
+ * {
+ *  channel,
+ *  jobs:[],
+ *  user
+ * }
+ * 
+ * job
+ * {
+ *  job:uuid,
+ *  user,
+ *  req:{
+ *    d:
+ *    s:
+ *    segments:[
+ *      {
+ *        sha256:
+ *        size:
+ *        status:
+ *      },
+ *      ...
+ *    ]
+ *  }  
+ *  res:{
+ *    d:
+ *    s:
+ *    //equal req 
+ *  }
+ * }
+ */
 
 class ChannelModel extends EventEmitter{
   constructor(collection){
@@ -22,44 +56,39 @@ class ChannelModel extends EventEmitter{
 
     if(typeof userToken !== 'string' || !userToken.length)
       return einval('invalid avatar')
-    
-    let list = this.collection.list
-
 
     let channelUUID = UUID.v4()
     let params = {
       userToken,
       uuid: channelUUID,
-      channelToken: jwt.encode({ channelUUID }, secret) 
+      channelToken:jwt.encode({ uuid: channelUUID }, secret)
     }
-    // get response from NAS
-    let info 
-    try{ info =  tokenFromNas(params) }
-    catch(e){
-      console.log('获取NAS认证失败' + e)
-      callback(e)
-    }
+    // get token from nas
+    tokenFromNas(params, (err,res)=>{
+      if(err) return callback(err)
+      let { uuid, user, channelToken } = res
+      if(typeof user !== 'string' || !user.length)
+      return callback(new Error('invalid user'))
+      if(typeof channelToken !== string || !channelToken.length)
+        return callback(new Error('invalid channelToken'))
+      let newChannel = {
+          channelToken,
+          channel: uuid,
+          jobs: [],
+          user
+      }
 
-    let { uuid, user, channelToken } = info
-    if(typeof user !== 'string' || !user.length)
-      return callback(einval('invalid user'))
-    if(typeof channelToken !== string || !channelToken.length)
-      return callback(einval('invalid channelToken'))
-    let newChannel = {
-        channel: uuid,
-        jobs: [],
-        user
-    }
-
-    let list = this.collection.list
-    this.collection.updateAsync(list, [...list, newChannel]).asCallback(err => {
-      if (err) return callback(err)
-      callback(null, newChannel)
+      let list = this.collection.list
+      this.collection.updateAsync(list, [...list, newChannel]).asCallback(err => {
+        if (err) return callback(err)
+        callback(null, newChannel)
+      })
     })
-
   }
 
 }
+
+let channelModel = false
 
 const createChannelModel = (filepath, tmpdir, callback) => 
   createChannelModelAsync(filepath, tmpdir).asCallback((err, result) => 
@@ -67,12 +96,18 @@ const createChannelModel = (filepath, tmpdir, callback) =>
 
 
 const createChannelModelAsync = async (filepath, tmpfolder) => {
-
-  let collection = await openOrCreateCollectionAsync(filepath, tmpfolder) 
-  if (collection) {
-    return new UserModel(collection)
+  if(channelModel)
+    return channelModel
+  else{
+    let collection = await openOrCreateCollectionAsync(filepath, tmpfolder) 
+    if (collection) {
+      channelModel = new ChannelModel(collection)
+      // console.log("channelModel:" + channelModel)
+      return channelModel
+    }
+    return null
   }
-  return null
+  
 }
 
 export { createChannelModel, createChannelModelAsync }

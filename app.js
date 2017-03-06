@@ -5,7 +5,7 @@ import routes from './routes'
 import config from 'config-lite'
 import pkg from './package'
 import auth from './middlewares/auth'
-
+import paths from './lib/paths'
 
 let app = express()
 
@@ -17,6 +17,9 @@ app.use(auth.init())
 
 // 路由
 routes(app)
+
+//设置根路径
+paths.setRootAsync(__dirname)
 
 if (module.parent) {
    module.exports = app
