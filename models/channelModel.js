@@ -115,7 +115,10 @@ class ChannelModel extends EventEmitter{
     let index = channel.jobs.findIndex( item => item.jobid === jobId)
     if(index === -1) return callback(new Error('job not find'))
     channel.jobs.splice(index, 1)
-    callback(null)
+    this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
+        if(err) return callback(err)
+        callback(null)
+    })
   }
 
   checkState(channelId, jobId){

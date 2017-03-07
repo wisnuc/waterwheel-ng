@@ -29,7 +29,8 @@
     "passport": "^0.3.2",
     "passport-http": "^0.3.0",
     "passport-jwt": "^2.2.1",
-    "request": "^2.79.0"
+    "request": "^2.79.0",
+    "sanitize-filename": "^1.6.1"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
