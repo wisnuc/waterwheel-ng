@@ -72,7 +72,7 @@ class ChannelModel extends EventEmitter{
       let { uuid, user, channelToken } = res
       if(typeof user !== 'string' || !user.length)
       return callback(new Error('invalid user'))
-      if(typeof channelToken !== string || !channelToken.length)
+      if(typeof channelToken !== 'string' || !channelToken.length)
         return callback(new Error('invalid channelToken'))
       let newChannel = {
           channelToken,
@@ -106,7 +106,7 @@ class ChannelModel extends EventEmitter{
   updateJob(channelId, jobId, props, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
     let job = channel.jobs.find(j => j.jobid === jobId)
-    //TODO 
+    // TODO 
   }
 
   removeJob(channelId, jobId, callback){
@@ -119,9 +119,11 @@ class ChannelModel extends EventEmitter{
   }
 
   checkState(channelId, jobId){
-    //TODO check state
+    // TODO check state
 
   }
+
+
 
   getJob(channelId, jobId){
     let channel =  this.collection.list.find(c => c.channelid === channelId)

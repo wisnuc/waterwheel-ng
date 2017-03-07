@@ -23,12 +23,13 @@ router.get('/', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
     getChannelModelAsync().asCallback((err, channelModel) => {
         if(err) return res.status(500).json({})
-        res.status(200).type('application/json').json(JSON.stringify(channelModel.collection.list.find(c => c.channelid === channelId).jobs))
+        let channel = channelModel.collection.list.find(c => c.channelid === channelId)
+        res.status(200).type('application/json').json(channel.jobs)
     })
 })
 
-// update a job
-router.post('/:JobId', auth.jwt(), (req, res) => {
+// update a job , auth.jwt()   -> Type : nas / client 
+router.post('/:JobId/:Type', auth.jwt(), (req, res) => {
     
 })
 
