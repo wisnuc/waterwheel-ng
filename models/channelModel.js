@@ -14,14 +14,15 @@ import paths from '../lib/paths'
  * ChannelModel collection->list
  * 
  * {
- *  channel,
+ *  channelToken,
+ *  channelid,
  *  jobs:[],
  *  user
  * }
  * 
  * job
  * {
- *  job:uuid,
+ *  jobid:uuid,
  *  user,
  *  req:{
  *    d:
@@ -50,7 +51,7 @@ class ChannelModel extends EventEmitter{
     this.hash = UUID.v4()
   }
 
-  createChannel(userToken,callback){
+  createChannel(userToken, callback) {
     const einval = (text) => 
       process.nextTick(callback, Object.assign(new Error(text), { code: 'EINVAL' }))
     const ebusy = (text) => 
@@ -89,7 +90,7 @@ class ChannelModel extends EventEmitter{
   }
 
   //create new Job
-  createJob(channelId, callback){
+  createJob(channelId, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
     let newJob = {
       jobid: UUID.v4()
@@ -99,6 +100,37 @@ class ChannelModel extends EventEmitter{
         if(err) return callback(err)
         callback(null,newJob)
     })
+  }
+
+  //client update  nas update 
+  updateJob(channelId, jobId, props, callback) {
+    let channel =  this.collection.list.find(c => c.channelid === channelId)
+    let job = channel.jobs.find(j => j.jobid === jobId)
+    //TODO 
+  }
+
+  removeJob(channelId, jobId, callback){
+    let channel = this.getChannel(channelId)
+    if(channel == undefined) return callback(new Error('channel not find'))
+    let index = channel.jobs.findIndex( item => item.jobid === jobId)
+    if(index === -1) return callback(new Error('job not find'))
+    channel.jobs.splice(index, 1)
+    callback(null)
+  }
+
+  checkState(channelId, jobId){
+    //TODO check state
+
+  }
+
+  getJob(channelId, jobId){
+    let channel =  this.collection.list.find(c => c.channelid === channelId)
+    let job = channel.jobs.find(j => j.jobid === jobId)
+    return job
+  }
+
+  getChannel(channelId){
+    return this.collection.list.find(c => c.channelid === channelId)
   }
 
 }

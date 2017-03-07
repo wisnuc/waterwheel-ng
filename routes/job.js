@@ -29,7 +29,7 @@ router.get('/', auth.jwt(), (req, res) => {
 
 // update a job
 router.post('/:JobId', auth.jwt(), (req, res) => {
-
+    
 })
 
 router.get('/:JobId', auth.jwt(), (req, res) => {
