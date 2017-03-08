@@ -43,7 +43,9 @@ router.post('/:JobId/:Type', auth.jwt(), (req, res) => {
     if(err) return res.status(500).json({})
     let job = channelModel.getJob(channelId, req.params.JobId)
     if(!job) return res.status(404).json({})
-        
+    
+    //TODO req.body ...
+
     if (req.is('multipart/form-data')) {
       let sha256, abort = false
 

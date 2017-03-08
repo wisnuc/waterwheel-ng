@@ -15,15 +15,13 @@ app.use(bodyParser.json())
 //auth middleware
 app.use(auth.init())
 
-// 路由
+// config routes
 routes(app)
 
-//设置根路径
+//set root path
 paths.setRootAsync(__dirname)
 
-if (module.parent) {
-   module.exports = app
-} else {
-  // 监听端口，启动程序
+if (module.parent) module.exports = app 
+else 
   app.listen(config.port, () => console.log(`${pkg.name} listening on port ${config.port}`))
-}
+
