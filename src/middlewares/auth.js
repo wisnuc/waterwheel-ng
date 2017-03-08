@@ -13,7 +13,6 @@ const jwtOpts = {
 }
 
 const jwtVerify = (jwt_payload, done) => {
-  let channelPath = path.join(paths.get('channels'), 'channels.json')
   getChannelModelAsync().asCallback((err,channelModel) => {
       let channel = channelModel.collection.list.find(c => c.channelid === jwt_payload.uuid)
       channel ? done(null, {uuid: jwt_payload.uuid}) : done(null, false)

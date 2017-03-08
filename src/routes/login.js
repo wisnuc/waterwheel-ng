@@ -8,8 +8,6 @@ const router = Router();
 
 router.post('/', (req, res) => {
   let userToken = req.body.usertoken
-  console.log(userToken)
-  let channelPath = path.join(paths.get('channels'), 'channels.json')
   getChannelModelAsync().asCallback((err, channelModel) => {
     if(err) return res.status(500).json({})
     else{

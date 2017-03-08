@@ -12,15 +12,42 @@ import { getChannelModelAsync } from '../models/channelModel'
 
 const router = Router();
 
+/**
+ * params
+ * 
+ * {
+ *  d:
+ *  s:
+ *  segment:{
+ *     sha256,
+ *     size,
+ *   }
+ * }
+ * 
+ */
+
 //create new job
 router.post('/', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
+    let singleJob = false   // 是否 一次性 带文件 上传
     getChannelModelAsync().asCallback((err, channelModel) => {
         if(err) return res.status(500).json({})
-        channelModel.createJob(channelId, (err, newJob) => {
+        if (req.is('multipart/form-data')) {
+          singleJob = true
+          //TODO singleJob
+        }else{
+          let { d, s, segment } = req.body
+          if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
+            return res.status(400).json({err: 'd or s not fond'})
+          if(typeof segment.sha256 !== string || !segment.sha256.length)
+            return res.status(400).json({err: 'need sha256'})
+          if(typeof segment.size !== 'number' || size <= 0)
+            return res.status(400).json({err: 'size error'}) 
+          channelModel.createJob(channelId, { d, s, segment, singleJob }, (err, newJob) => {
             if(err) return res.status(500).end()
-            res.status(200).json({job: newJob.jobid})
-        })
+            res.status(200).json(newJob)
+          })
+        }
     })
 
 })
@@ -35,16 +62,16 @@ router.get('/', auth.jwt(), (req, res) => {
         res.status(200).type('application/json').json(jobs)
     })
 })
-
+/**
+ *  {sha256 , ...} only care sha256
+ */
 // update a job , auth.jwt()   -> Type : nas / client 
-router.post('/:JobId/:Type', auth.jwt(), (req, res) => {
+router.post('/:JobId', auth.jwt(), (req, res) => {
   let channelId = req.user.uuid;
   getChannelModelAsync().asCallback((err, channelModel) => {
     if(err) return res.status(500).json({})
     let job = channelModel.getJob(channelId, req.params.JobId)
     if(!job) return res.status(404).json({})
-    
-    //TODO req.body ...
 
     if (req.is('multipart/form-data')) {
       let sha256, abort = false
@@ -52,7 +79,10 @@ router.post('/:JobId/:Type', auth.jwt(), (req, res) => {
       let form = new formidable.IncomingForm()
       form.hash = 'sha256'
 
+      let jobObj = {}
+
       form.on('field', (name, value) => {
+        jobObj.name = value
         if (name === 'sha256') 
           sha256 = value
       })
@@ -72,11 +102,17 @@ router.post('/:JobId/:Type', auth.jwt(), (req, res) => {
             res.status(500).json({})  // TODO
           })
         }
-        let targetpath = path.join(paths.get('file'), UUID.v4())
+        let targetpath = path.join(paths.get('file'), sha256)
+
+        //move file  
         fs.rename(file.path, targetpath, err => {
           if(err) return res.status(500).json({})
-            // TODO
-          return res.status(200).json({})
+
+          channelModel.updateJob(channel.channelid, job.jobid, jobObj, (e, result) => {
+            // TODO  error remove tmp file
+            if(e) return res.status(500).json({})
+            return res.status(200).json(result)
+          })
         })
       })
 

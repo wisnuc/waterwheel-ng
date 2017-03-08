@@ -4,7 +4,7 @@ import path from 'path'
 import jwt from 'jwt-simple'
 import UUID from 'node-uuid'
 
-import { tokenFromNas } from '../lib/channel'
+import channel from '../lib/channel'
 import { secret }  from '../config/passportJwt'
 import { openOrCreateCollectionAsync} from './collection'
 import paths from '../lib/paths'
@@ -42,6 +42,8 @@ import paths from '../lib/paths'
  *    //equal req 
  *  }
  * }
+ * 
+ * state -> PADDING UPLOADING UPLOADED
  */
 
 class ChannelModel extends EventEmitter{
@@ -67,7 +69,7 @@ class ChannelModel extends EventEmitter{
       channelToken:jwt.encode({ uuid: channelUUID }, secret)
     }
     // get token from nas
-    tokenFromNas(params, (err,res)=>{
+    channel.tokenFromNas(params, (err,res)=>{
       if(err) return callback(err)
       let { uuid, user, channelToken } = res
       if(typeof user !== 'string' || !user.length)
@@ -90,11 +92,25 @@ class ChannelModel extends EventEmitter{
   }
 
   //create new Job
-  createJob(channelId, callback) {
+  createJob(channelId, props, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
+
+    let { d, s, segment, singleJob } = props
     let newJob = {
-      jobid: UUID.v4()
+      jobid: UUID.v4(),
+      req: {
+        d,
+        s,
+        segments: [] 
+      },
+      res: {}
     }
+    
+    
+    segment.state = singleJob ? 'UPLOADED' : 'PADDING'
+
+    newJob.req.segments.push(segment)
+
     channel.jobs.push(newJob)
     this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
         if(err) return callback(err)
@@ -102,16 +118,21 @@ class ChannelModel extends EventEmitter{
     })
   }
 
+
   //client update  nas update 
   updateJob(channelId, jobId, props, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
     let job = channel.jobs.find(j => j.jobid === jobId)
-    // TODO 
+    job.push(props)
+    this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
+        if(err) return callback(err)
+        callback(null)
+    })
   }
 
   removeJob(channelId, jobId, callback){
     let channel = this.getChannel(channelId)
-    if(channel == undefined) return callback(new Error('channel not find'))
+    if(channel === undefined) return callback(new Error('channel not find'))
     let index = channel.jobs.findIndex( item => item.jobid === jobId)
     if(index === -1) return callback(new Error('job not find'))
     channel.jobs.splice(index, 1)

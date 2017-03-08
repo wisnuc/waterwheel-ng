@@ -2,6 +2,7 @@
   "presets": ["es2015", "bluebird"],
   "plugins": [
      "transform-async-to-bluebird", 
-    "transform-promise-to-bluebird"
+    "transform-promise-to-bluebird",
+    "transform-runtime"
   ]
 }

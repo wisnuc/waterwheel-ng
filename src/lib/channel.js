@@ -16,7 +16,7 @@ const tokenFromNas = (props, callback) => {
   })
 }
 
-export { tokenFromNas }
+export default { tokenFromNas }
 
 // take CTK ,userToken ,uuid to nas ,get ctk 
 const getAcceptFromNas  = (props) => {

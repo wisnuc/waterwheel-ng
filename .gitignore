@@ -10,7 +10,6 @@ npm-debug.log*
 tmp
 files
 channels
-test
 
 # Runtime data
 pids

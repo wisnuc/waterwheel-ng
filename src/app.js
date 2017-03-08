@@ -2,8 +2,6 @@ import express from 'express'
 import bodyParser from 'body-parser'
 
 import routes from './routes'
-import config from 'config-lite'
-import pkg from './package'
 import auth from './middlewares/auth'
 import paths from './lib/paths'
 
@@ -19,9 +17,11 @@ app.use(auth.init())
 routes(app)
 
 //set root path
-paths.setRootAsync(__dirname)
+paths.setRootAsync(process.cwd())
 
-if (module.parent) module.exports = app 
-else 
-  app.listen(config.port, () => console.log(`${pkg.name} listening on port ${config.port}`))
+
+export default app
+// if (module.parent) module.exports = app 
+// else 
+//   app.listen(config.port, () => console.log(`${pkg.name} listening on port ${config.port}`))
 
