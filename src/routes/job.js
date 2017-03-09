@@ -107,17 +107,19 @@ router.post('/', auth.jwt(), (req, res) => {
             return res.status(400).json({err: 'd or s not fond'})
           if(!(segments instanceof Array) || segments.length === 0)
             return res.status(400).json({err: 'segments can not be empty'})
-          
           let segs = []
-          for(let segment in segments){
-            if(typeof segment.sha256 !== string || !segment.sha256.length)
-              return res.status(400).json({err: 'need sha256'})
-            if(typeof segment.size !== 'number' || size <= 0)
-             return res.status(400).json({err: 'size error'})
-            segs.push({sha256: segment.sha256, size: segment.size})
-          }
 
-          channelModel.createJob(channelId, { d, s, segs, singleJob }, (err, newJob) => {
+          segments.forEach( segment => {
+            if(!segment.hasOwnProperty('sha256') || typeof segment.sha256 !== 'string' || !segment.sha256.length)
+              return res.status(400).json({err: 'need sha256'})
+            
+            if(!segment.hasOwnProperty('size') || typeof segment.size !== 'number' || segment.size <= 0)
+              return res.status(400).json({err: 'size error'})
+
+            segs.push({sha256: segment.sha256, size: segment.size})
+          })
+
+          channelModel.createJob(channelId, { d, s, segments: segs, singleJob }, (err, newJob) => {
             if(err) return res.status(500).end()
             res.status(200).json(newJob)
           })

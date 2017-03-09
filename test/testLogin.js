@@ -34,7 +34,7 @@ describe(path.basename(__filename) + ' : test device login api' ,() => {
         })
     })
 
-    const postMediaShare = (post, callback) => {
+    const postLogin = (post, callback) => {
      
       request(app)
         .post('/login')
@@ -56,7 +56,7 @@ describe(path.basename(__filename) + ' : test device login api' ,() => {
             callback(null, nasResponse)
         })
         sinon.stub(UUID, 'v4').returns(channelToken)
-        postMediaShare(post, (e, res) => {
+        postLogin(post, (e, res) => {
             if(e) {
                 channel.tokenFromNas.restore()
                 UUID.v4.restore()

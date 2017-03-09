@@ -110,9 +110,7 @@ class ChannelModel extends EventEmitter{
       singleSegment.state = 'UPLOADED'
       newJob.req.segments.push(singleSegment)
     }else{
-      for (let segment in segments) {
-        segment.state = 'PADDING'
-      }
+      segments.forEach( s => s.state = 'PADDING')
       newJob.req.segments = segments
     }
     channel.jobs.push(newJob)
