@@ -11,7 +11,7 @@ import { expect } from 'chai'
 
 import { createChannelModel } from '../src/models/channelModel'
 import { secret } from '../src/config/passportJwt'
-import channel from '../src/lib/channel'
+import token from '../src/lib/token'
 import app from '../src/app'
 
 let userUUID = '9f93db43-02e6-4b26-8fae-7d6f51da12af'
@@ -52,18 +52,18 @@ describe(path.basename(__filename) + ' : test device login api' ,() => {
     }
 
     it('should get ctk as channelUUID', (done) => {
-        sinon.stub(channel, 'tokenFromNas', (props, callback) => {
+        sinon.stub(token, 'tokenFromNas', (props, callback) => {
             callback(null, nasResponse)
         })
         sinon.stub(UUID, 'v4').returns(channelToken)
         postLogin(post, (e, res) => {
             if(e) {
-                channel.tokenFromNas.restore()
+                token.tokenFromNas.restore()
                 UUID.v4.restore()
                 return done(e)
             }
             expect(res.token).to.equal(channelToken)
-            channel.tokenFromNas.restore()
+            token.tokenFromNas.restore()
             UUID.v4.restore()
             done()
         })

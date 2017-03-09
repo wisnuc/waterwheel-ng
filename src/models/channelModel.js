@@ -4,7 +4,7 @@ import path from 'path'
 import jwt from 'jwt-simple'
 import UUID from 'node-uuid'
 
-import channel from '../lib/channel'
+import token from '../lib/token'
 import { secret }  from '../config/passportJwt'
 import { openOrCreateCollectionAsync} from './collection'
 import paths from '../lib/paths'
@@ -69,7 +69,7 @@ class ChannelModel extends EventEmitter{
       channelToken:jwt.encode({ uuid: channelUUID }, secret)
     }
     // get token from nas
-    channel.tokenFromNas(params, (err,res)=>{
+    token.tokenFromNas(params, (err,res)=>{
       if(err) return callback(err)
       let { uuid, user, channelToken } = res
       if(typeof user !== 'string' || !user.length)
