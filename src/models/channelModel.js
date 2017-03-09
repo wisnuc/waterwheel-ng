@@ -92,10 +92,9 @@ class ChannelModel extends EventEmitter{
   }
 
   //create new Job
-  createJob(channelId, props, callback) {
+  createJob(channelId, { d, s, segments, singleJob }, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
 
-    let { d, s, segment, singleJob } = props
     let newJob = {
       jobid: UUID.v4(),
       req: {
@@ -106,11 +105,16 @@ class ChannelModel extends EventEmitter{
       res: {}
     }
     
-    
-    segment.state = singleJob ? 'UPLOADED' : 'PADDING'
-
-    newJob.req.segments.push(segment)
-
+    if(singleJob){
+      let singleSegment = segments[0]
+      singleSegment.state = 'UPLOADED'
+      newJob.req.segments.push(singleSegment)
+    }else{
+      for (let segment in segments) {
+        segment.state = 'PADDING'
+      }
+      newJob.req.segments = segments
+    }
     channel.jobs.push(newJob)
     this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
         if(err) return callback(err)
@@ -119,11 +123,12 @@ class ChannelModel extends EventEmitter{
   }
 
 
-  //client update  nas update 
-  updateJob(channelId, jobId, props, callback) {
+  //client update  nas update with a blob sha256
+  updateJob(channelId, jobId, sha256, callback) {
     let channel =  this.collection.list.find(c => c.channelid === channelId)
     let job = channel.jobs.find(j => j.jobid === jobId)
-    job.push(props)
+    let segment = job.segments.find(s => s.sha256 === sha256)
+    segment.state = 'UPLOADED'
     this.collection.updateAsync(this.collection.list,this.collection.list).asCallback(err => {
         if(err) return callback(err)
         callback(null)
@@ -140,6 +145,12 @@ class ChannelModel extends EventEmitter{
         if(err) return callback(err)
         callback(null)
     })
+  }
+
+  updateState(channelId, jobId, sha256, state){
+    let job = this.getJob(channelId, jobId)
+    let segment = job.segments.find( s => s.sha256 === sha256)
+    segment.state = state
   }
 
   checkState(channelId, jobId){

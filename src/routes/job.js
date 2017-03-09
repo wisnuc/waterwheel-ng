@@ -18,12 +18,14 @@ const router = Router();
  * {
  *  d:
  *  s:
- *  segment:{
+ *  segments:[{
  *     sha256,
  *     size,
- *   }
+ *   },
+ *   ....
+ *  ]
  * }
- * 
+ *
  */
 
 //create new job
@@ -34,16 +36,88 @@ router.post('/', auth.jwt(), (req, res) => {
         if(err) return res.status(500).json({})
         if (req.is('multipart/form-data')) {
           singleJob = true
-          //TODO singleJob
+          let sha256, segments, abort, d, s, size = false
+          let form = new formidable.IncomingForm()
+          form.hash = 'sha256'
+          form.on('field', (name, value) => {
+            if (name === 'd')  d = value
+            else if(name === 's')  s = value
+            else if(name === 'segments' && (value instanceof Array) && value.length){
+              segments = value
+              if(segments[0].hasOwnProperty('sha256') && segments[0].hasOwnProperty('size')){
+                sha256 = segments[0].sha256
+                size = segments[0].size
+              }
+            }
+          })
+
+          form.on('fileBegin', (name, file) => {
+            if(!sha256){
+              abort = true
+              return res.status(400).json({err: 'could not found sha256'})
+            }
+            else if (sanitize(file.name) !== file.name) {
+              abort = true
+              return res.status(500).json({})  // TODO
+            }
+            file.path = path.join(paths.get('tmp'), UUID.v4())
+          })
+
+          form.on('file', (name, file) => {
+            if (abort) return res.status(500).end()
+            if (sha256 !== file.hash) {
+              return fs.unlink(file.path, err => {
+                res.status(500).json({})  // TODO
+              })
+            }
+            let targetpath = path.join(paths.get('file'), sha256)
+            
+            if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
+              return res.status(400).json({err: 'd or s not fond'})
+            if(typeof sha256 !== string || !sha256.length)
+              return res.status(400).json({err: 'need sha256'})
+            if(typeof size !== 'number' || size <= 0)
+              return res.status(400).json({err: 'size error'}) 
+
+            segments = [{ sha256, size}]
+            //move file  
+            fs.rename(file.path, targetpath, err => {
+              if(err) return res.status(500).json({})
+              channelModel.createJob(channelId, { d, s, segments, singleJob }, (err, newJob) => {
+                if(err) return res.status(500).end()
+                res.status(200).json(newJob)
+              })
+            })
+          })
+
+          // this may be fired after user abort, so response is not guaranteed to send
+          form.on('error', err => {
+            abort = true
+            return res.status(500).json({
+              code: err.code,
+              message: err.message
+            })
+          })
+
+          form.parse(req)
         }else{
-          let { d, s, segment } = req.body
+          let { d, s, segments } = req.body
+
           if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
             return res.status(400).json({err: 'd or s not fond'})
-          if(typeof segment.sha256 !== string || !segment.sha256.length)
-            return res.status(400).json({err: 'need sha256'})
-          if(typeof segment.size !== 'number' || size <= 0)
-            return res.status(400).json({err: 'size error'}) 
-          channelModel.createJob(channelId, { d, s, segment, singleJob }, (err, newJob) => {
+          if(!(segments instanceof Array) || segments.length === 0)
+            return res.status(400).json({err: 'segments can not be empty'})
+          
+          let segs = []
+          for(let segment in segments){
+            if(typeof segment.sha256 !== string || !segment.sha256.length)
+              return res.status(400).json({err: 'need sha256'})
+            if(typeof segment.size !== 'number' || size <= 0)
+             return res.status(400).json({err: 'size error'})
+            segs.push({sha256: segment.sha256, size: segment.size})
+          }
+
+          channelModel.createJob(channelId, { d, s, segs, singleJob }, (err, newJob) => {
             if(err) return res.status(500).end()
             res.status(200).json(newJob)
           })
@@ -78,11 +152,7 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
 
       let form = new formidable.IncomingForm()
       form.hash = 'sha256'
-
-      let jobObj = {}
-
       form.on('field', (name, value) => {
-        jobObj.name = value
         if (name === 'sha256') 
           sha256 = value
       })
@@ -103,12 +173,11 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
           })
         }
         let targetpath = path.join(paths.get('file'), sha256)
-
         //move file  
         fs.rename(file.path, targetpath, err => {
           if(err) return res.status(500).json({})
 
-          channelModel.updateJob(channel.channelid, job.jobid, jobObj, (e, result) => {
+          channelModel.updateJob(channel.channelid, job.jobid , sha256, (e, result) => {
             // TODO  error remove tmp file
             if(e) return res.status(500).json({})
             return res.status(200).json(result)
