@@ -170,30 +170,24 @@ class ChannelModel extends EventEmitter{
 
 }
 
-let channelModel = false
-
 const createChannelModel = (filepath, tmpdir, callback) => 
   createChannelModelAsync(filepath, tmpdir).asCallback((err, result) => 
     callback(err, result))
 
 
 const createChannelModelAsync = async (filepath, tmpfolder) => {
-  if(channelModel)
-    return channelModel
-  else{
     let collection = await openOrCreateCollectionAsync(filepath, tmpfolder) 
     if (collection) {
-      channelModel = new ChannelModel(collection)
+      let channelModel = new ChannelModel(collection)
       return channelModel
     }
     return null
-  }
 }
 
-const getChannelModelAsync = async () => {
-  let channelPath = path.join(paths.get('channels'), 'channels.json')
-  if(channelModel) return channelModel;
-  else return await createChannelModelAsync(channelPath, paths.get('tmp'));
-}
+// const getChannelModelAsync = async () => {
+//   let channelPath = path.join(paths.get('channels'), 'channels.json')
+//   if(channelModel) return channelModel;
+//   else return await createChannelModelAsync(channelPath, paths.get('tmp'));
+// }
 
-export { createChannelModel, createChannelModelAsync, getChannelModelAsync}
+export { createChannelModel, createChannelModelAsync }

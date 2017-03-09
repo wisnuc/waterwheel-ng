@@ -3,7 +3,7 @@ import path from 'path'
 import passport from 'passport'
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt'
 
-import { getChannelModelAsync } from '../models/channelModel'
+import models from '../models/models'
 import { secret } from '../config/passportJwt'
 import paths from '../lib/paths'
 
@@ -13,10 +13,9 @@ const jwtOpts = {
 }
 
 const jwtVerify = (jwt_payload, done) => {
-  getChannelModelAsync().asCallback((err,channelModel) => {
-      let channel = channelModel.collection.list.find(c => c.channelid === jwt_payload.uuid)
-      channel ? done(null, {uuid: jwt_payload.uuid}) : done(null, false)
-  })
+  let channelModel = models.getModel('channelModel')
+  let channel = channelModel.collection.list.find(c => c.channelid === jwt_payload.uuid)
+  channel ? done(null, {uuid: jwt_payload.uuid}) : done(null, false)
 }
 
 passport.use(new JwtStrategy(jwtOpts, jwtVerify))
