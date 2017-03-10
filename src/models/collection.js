@@ -33,7 +33,13 @@ class Collection {
     catch (e) {
       this.locked = false
       throw e
-    }
+    }finally{
+      this.locked = false
+    } 
+  }
+
+  load(){
+    // TODO
   } 
 }
 
@@ -48,7 +54,7 @@ const openOrCreateCollectionAsync = async (filepath, tmpfolder) => {
   catch (e) {
     if (e.code !== 'ENOENT') throw e
     return new Collection(filepath, tmpfolder, [])
-  } 
+  }
     
 }
 
