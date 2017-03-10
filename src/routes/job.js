@@ -41,9 +41,10 @@ router.post('/', auth.jwt(), (req, res) => {
       form.on('field', (name, value) => {
         if (name === 'd')  d = value
         else if(name === 's')  s = value
-        else if(name === 'segments' && (value instanceof Array) && value.length){
-          segments = value
+        else if(name === 'segments' && (JSON.parse(value) instanceof Array) && JSON.parse(value).length){
+          segments = JSON.parse(value)
           if(segments[0].hasOwnProperty('sha256') && segments[0].hasOwnProperty('size')){
+            
             sha256 = segments[0].sha256
             size = segments[0].size
           }
@@ -69,11 +70,11 @@ router.post('/', auth.jwt(), (req, res) => {
             res.status(500).json({})  // TODO
           })
         }
-        let targetpath = path.join(paths.get('file'), sha256)
+        let targetpath = path.join(paths.get('files'), sha256)
         
         if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
           return res.status(400).json({err: 'd or s not fond'})
-        if(typeof sha256 !== string || !sha256.length)
+        if(typeof sha256 !== 'string' || !sha256.length)
           return res.status(400).json({err: 'need sha256'})
         if(typeof size !== 'number' || size <= 0)
           return res.status(400).json({err: 'size error'}) 
@@ -91,6 +92,7 @@ router.post('/', auth.jwt(), (req, res) => {
 
       // this may be fired after user abort, so response is not guaranteed to send
       form.on('error', err => {
+        console.log(4)
         abort = true
         return res.status(500).json({
           code: err.code,
@@ -169,7 +171,7 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
           res.status(500).json({})  // TODO
         })
       }
-      let targetpath = path.join(paths.get('file'), sha256)
+      let targetpath = path.join(paths.get('files'), sha256)
       //move file  
       fs.rename(file.path, targetpath, err => {
         if(err) return res.status(500).json({})
