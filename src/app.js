@@ -8,6 +8,7 @@ import auth from './middlewares/auth'
 import paths from './lib/paths'
 import models from './models/models'
 import { createChannelModelAsync } from './models/channelModel'
+import define from './utils/define'
 
 let app = express()
 
@@ -23,9 +24,9 @@ routes(app)
 //set root path
 paths.setRootAsync(process.cwd())
 
-let channelPath = path.join(paths.get('channels'), 'channels.json')
-createChannelModelAsync(channelPath, paths.get('tmp')).asCallback((e, channelModel) => {
-    models.setModel('channelModel', channelModel)
+let channelPath = path.join(paths.get(define.channels), 'channels.json')
+createChannelModelAsync(channelPath, paths.get(define.tmp)).asCallback((e, channelModel) => {
+    models.setModel(define.channelModel, channelModel)
 })
 
 export default app

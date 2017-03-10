@@ -3,12 +3,13 @@ import { Router } from 'express'
 
 import paths from '../lib/paths'
 import models from '../models/models'
+import define from '../utils/define'
 
 const router = Router();
 
 router.post('/', (req, res) => {
   let userToken = req.body.usertoken
-  let channelModel = models.getModel('channelModel')
+  let channelModel = models.getModel(define.channelModel)
   channelModel.createChannel(userToken, (err, newChannel) => {
     if(err) return res.status(500).end() 
     res.json({

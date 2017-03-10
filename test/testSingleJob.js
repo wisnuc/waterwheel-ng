@@ -10,6 +10,7 @@ import { expect } from 'chai'
 import { createChannelModel } from '../src/models/channelModel'
 import models from '../src/models/models'
 import app from '../src/app'
+import define from '../src/utils/define'
 
 let userUUID = '9f93db43-02e6-4b26-8fae-7d6f51da12af'
 let channelUUID = '1ee2be49-05c4-4ae1-b249-cd6f4cf04376'
@@ -42,7 +43,7 @@ describe(path.basename(__filename) + ' : test device create new job api' ,() => 
         //fake channelModel
         createChannelModel(path.join(process.cwd(), 'tmptest/channelModel.json'), path.join(process.cwd(), 'tmptest'), (e, res)=>{
           if(e) return done(e)
-          models.setModel('channelModel', res)
+          models.setModel(define.channelModel, res)
 
           //create Test File
           fs.writeFile(path.join(filePath), json, e => {
@@ -103,7 +104,7 @@ describe(path.basename(__filename) + ' : test device create new job api' ,() => 
 
   afterEach('delete tmp files', (done) => {
       rimraf.sync('tmptest')
-      
+      //TODO expect
       done()
   })
 

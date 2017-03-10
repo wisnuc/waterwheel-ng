@@ -2,6 +2,8 @@ import path from 'path'
 import mkdirp from 'mkdirp'
 import Promise from 'bluebird'
 
+import define from '../utils/define'
+
 let root = undefined
 
 const mkdirpAsync = Promise.promisify(mkdirp)
@@ -15,9 +17,9 @@ const setRootAsync = async (rootpath) => {
     root = rootpath
     await mkdirpAsync(root)
     await Promise.all([
-        mkdirpAsync(join('tmp')),
-        mkdirpAsync(join('channels')),
-        mkdirpAsync(join('files'))
+        mkdirpAsync(join(define.tmp)),
+        mkdirpAsync(join(define.channels)),
+        mkdirpAsync(join(define.files))
     ])
 }
 
@@ -29,9 +31,9 @@ const setRoot = (rootpath,callback) =>
 const getPath = (name) => {
     if(!root) throw new Error('root not set')
     switch(name){
-        case 'tmp':
-        case 'channels':
-        case 'files':
+        case define.files:
+        case define.tmp:
+        case define.channels:
             return join(name)
         case 'root':
             return root

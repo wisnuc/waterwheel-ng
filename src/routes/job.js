@@ -9,6 +9,7 @@ import sanitize from 'sanitize-filename'
 import paths from '../lib/paths'
 import auth from '../middlewares/auth'
 import models from '../models/models'
+import define from '../utils/define'
 
 const router = Router();
 
@@ -32,7 +33,7 @@ const router = Router();
 router.post('/', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
     let singleJob = false   // 是否 一次性 带文件 上传
-    let channelModel = models.getModel('channelModel')
+    let channelModel = models.getModel(define.channelModel)
     if (req.is('multipart/form-data')) {
       singleJob = true
       let sha256, segments, abort, d, s, size = false
@@ -60,7 +61,7 @@ router.post('/', auth.jwt(), (req, res) => {
           abort = true
           return res.status(500).json({})  // TODO
         }
-        file.path = path.join(paths.get('tmp'), UUID.v4())
+        file.path = path.join(paths.get(define.tmp), UUID.v4())
       })
 
       form.on('file', (name, file) => {
@@ -70,7 +71,7 @@ router.post('/', auth.jwt(), (req, res) => {
             res.status(500).json({})  // TODO
           })
         }
-        let targetpath = path.join(paths.get('files'), sha256)
+        let targetpath = path.join(paths.get(define.files), sha256)
         
         if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
           return res.status(400).json({err: 'd or s not fond'})
@@ -106,8 +107,8 @@ router.post('/', auth.jwt(), (req, res) => {
 
       if(typeof d !== 'string' || typeof s !== 'string' || !d.length || !s.length)
         return res.status(400).json({err: 'd or s not fond'})
-      if(!(segments instanceof Array) || segments.length === 0)
-        return res.status(400).json({err: 'segments can not be empty'})
+      if(!segments instanceof Array)
+        return res.status(400).json({err: 'segments not find'})
       let segs = []
 
       segments.forEach( segment => {
@@ -131,7 +132,7 @@ router.post('/', auth.jwt(), (req, res) => {
 //get all jobs
 router.get('/', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
-    let channelModel = models.getModel('channelModel')
+    let channelModel = models.getModel(define.channelModel)
     let channel = channelModel.collection.list.find(c => c.channelid === channelId)
     let jobs =  channel.jobs.map( item => item.jobid)
     res.status(200).type('application/json').json(jobs)
@@ -142,7 +143,7 @@ router.get('/', auth.jwt(), (req, res) => {
 // update a job , auth.jwt()   -> Type : nas / client 
 router.post('/:JobId', auth.jwt(), (req, res) => {
   let channelId = req.user.uuid;
-  let channelModel = models.getModel('channelModel')
+  let channelModel = models.getModel(define.channelModel)
   let job = channelModel.getJob(channelId, req.params.JobId)
   if(!job) return res.status(404).json({})
 
@@ -161,7 +162,7 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
         abort = true
         return res.status(500).json({})  // TODO
       }
-      file.path = path.join(paths.get('tmp'), UUID.v4())
+      file.path = path.join(paths.get(define.tmp), UUID.v4())
     })
 
     form.on('file', (name, file) => {
@@ -171,7 +172,7 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
           res.status(500).json({})  // TODO
         })
       }
-      let targetpath = path.join(paths.get('files'), sha256)
+      let targetpath = path.join(paths.get(define.files), sha256)
       //move file  
       fs.rename(file.path, targetpath, err => {
         if(err) return res.status(500).json({})
@@ -204,7 +205,7 @@ router.post('/:JobId', auth.jwt(), (req, res) => {
 //get a job obj
 router.get('/:JobId', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
-    let channelModel = models.getModel('channelModel')
+    let channelModel = models.getModel(define.channelModel)
     let job = channelModel.getJob(channelId, req.params.JobId)
     if(!job) return res.status(404).json({})
     return res.status(200).json(job)
@@ -214,7 +215,7 @@ router.get('/:JobId', auth.jwt(), (req, res) => {
 //remove a job api may not be used
 router.delete('/:JobId', auth.jwt(), (req, res) => {
     let channelId = req.user.uuid;
-    let channelModel = models.getModel('channelModel')
+    let channelModel = models.getModel(define.channelModel)
     channelModel.removeJob(channelId, req.params.JobId, (e) => {
         if(e) res.status(500).end()
         res.status(200).json({})
